@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>INFINITE — Facility Assessment Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .star { color: #f59e0b; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+  <!-- ── TOP BANNER ── -->
+  <div class="bg-[#0B1F3A] text-white text-center py-5 shadow-lg">
+    <p class="text-sm font-bold tracking-widest text-[#00A99D] uppercase">
+      INFINITE — Managed by MEDELITE
+    </p>
+    <h1 class="text-2xl font-bold mt-1">FACILITY ASSESSMENT SNAPSHOT</h1>
+    <p class="text-xs text-gray-400 mt-1">
+      Automated Facility Report Generator
+    </p>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- ── STEP 1: CCN LOOKUP ── -->
+    <div class="bg-white rounded-2xl shadow-md p-6">
+      <h2 class="text-lg font-bold text-[#0B1F3A] mb-1">
+        Step 1 — Facility Lookup
+      </h2>
+      <p class="text-sm text-gray-500 mb-4">
+        Enter a 6-digit CMS Certification Number (CCN) to fetch facility data.
+      </p>
+
+      <div class="flex gap-3">
+        <input
+          id="ccnInput"
+          type="text"
+          maxlength="6"
+          placeholder="e.g. 686123"
+          class="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+        />
+        <button
+          onclick="lookupFacility()"
+          id="lookupBtn"
+          class="bg-[#0B1F3A] text-white px-6 py-2 rounded-xl text-sm
+                 font-semibold hover:bg-[#00A99D] transition duration-200">
+          Lookup
+        </button>
+      </div>
+
+      <!-- Error message -->
+      <div id="lookupError"
+           class="text-red-500 text-sm mt-2 hidden">
+      </div>
+
+      <!-- Preview card — shown after successful lookup -->
+      <div id="lookupResult" class="mt-4 hidden">
+        <div class="bg-[#F0F4F8] rounded-xl p-4 text-sm space-y-1">
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Facility:</span>
+            <span id="previewName"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Location:</span>
+            <span id="previewLocation"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">State:</span>
+            <span id="previewState"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Certified Beds:</span>
+            <span id="previewBeds"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Overall Rating:</span>
+            <span id="previewRating" class="star"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Health Inspection:</span>
+            <span id="previewHealth" class="star"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Staffing:</span>
+            <span id="previewStaffing" class="star"></span>
+          </p>
+          <p>
+            <span class="font-bold text-[#0B1F3A]">Quality of Care:</span>
+            <span id="previewQuality" class="star"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: MANUAL INPUTS ── -->
+    <div id="manualSection" class="bg-white rounded-2xl shadow-md p-6 hidden">
+      <h2 class="text-lg font-bold text-[#0B1F3A] mb-1">
+        Step 2 — Manual Operational Inputs
+      </h2>
+      <p class="text-sm text-gray-500 mb-4">
+        Fill in the internal fields that are not in the public CMS database.
+      </p>
+
+      <div class="space-y-4">
+
+        <!-- Name Override -->
+        <div>
+          <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+            Facility Name Override
+            <span class="text-gray-400 font-normal normal-case">
+              (optional — leave blank to use official CMS name)
+            </span>
+          </label>
+          <input
+            id="nameOverride"
+            type="text"
+            placeholder="Type a custom name or leave blank"
+            class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                   text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+          />
+        </div>
+
+        <!-- EMR and Current Census side by side -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              EMR
+            </label>
+            <input
+              id="emr"
+              type="text"
+              placeholder="e.g. PCC, MatrixCare"
+              class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                     text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+            />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              Current Census
+            </label>
+            <input
+              id="currentCensus"
+              type="number"
+              placeholder="e.g. 112"
+              class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                     text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+            />
+          </div>
+        </div>
+
+        <!-- Type of Patient -->
+        <div>
+          <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+            Type of Patient
+          </label>
+          <input
+            id="patientType"
+            type="text"
+            placeholder="e.g. Long-term & Short-term"
+            class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                   text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+          />
+        </div>
+
+        <!-- Previous Coverage and Performance side by side -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              Previous Coverage from Medelite
+            </label>
+            <select
+              id="previousCoverage"
+              class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                     text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              Previous Provider Performance
+            </label>
+            <input
+              id="previousPerformance"
+              type="text"
+              placeholder="e.g. About 30 patients/day"
+              class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                     text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+            />
+          </div>
+        </div>
+
+        <!-- Medical Coverage -->
+        <div>
+          <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+            Medical Coverage
+          </label>
+          <input
+            id="medicalCoverage"
+            type="text"
+            placeholder="e.g. Optometry, PCP, Podiatry"
+            class="w-full mt-1 border border-gray-300 rounded-xl px-3 py-2
+                   text-sm focus:outline-none focus:ring-2 focus:ring-[#00A99D]"
+          />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── STEP 3: DOWNLOAD BUTTONS ── -->
+    <div id="downloadSection" class="hidden space-y-3">
+      <h2 class="text-lg font-bold text-[#0B1F3A]">
+        Step 3 — Download Report
+      </h2>
+
+      <div class="flex gap-4">
+        <!-- PDF Download -->
+        <button
+          onclick="downloadReport('pdf')"
+          id="pdfBtn"
+          class="flex-1 bg-[#0B1F3A] text-white py-3 rounded-xl font-bold
+                 hover:bg-[#00A99D] transition duration-200 text-sm">
+          ⬇ Download PDF
+        </button>
+
+        <!-- Word Download -->
+        <button
+          onclick="downloadReport('docx')"
+          id="docxBtn"
+          class="flex-1 border-2 border-[#0B1F3A] text-[#0B1F3A] py-3
+                 rounded-xl font-bold hover:bg-[#0B1F3A] hover:text-white
+                 transition duration-200 text-sm">
+          ⬇ Download Word (.docx)
+        </button>
+      </div>
+
+      <!-- Medicare Link -->
+      <div id="medicareLink" class="text-center hidden">
+        <a id="medicareLinkAnchor"
+           href="#"
+           target="_blank"
+           class="text-sm text-blue-600 underline hover:text-blue-800">
+          View on Medicare Care Compare →
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── JAVASCRIPT ── -->
+  <script>
+    let currentCCN = "";
+
+    function starsDisplay(rating) {
+      const n = parseInt(rating) || 0;
+      return "★".repeat(n) + "☆".repeat(5 - n);
+    }
+
+    async function lookupFacility() {
+      const ccn = document.getElementById("ccnInput").value.trim();
+      const errEl = document.getElementById("lookupError");
+      const btn = document.getElementById("lookupBtn");
+
+      // Hide previous errors
+      errEl.classList.add("hidden");
+
+      // Validate CCN
+      if (!/^\d{6}$/.test(ccn)) {
+        errEl.textContent = "Please enter a valid 6-digit CCN. Example: 686123";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      // Show loading state
+      btn.textContent = "Looking up...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/lookup/${ccn}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Facility not found");
+        }
+
+        // Store CCN for download step
+        currentCCN = ccn;
+
+        // Populate preview card
+        document.getElementById("previewName").textContent = data.provider_name;
+        document.getElementById("previewLocation").textContent =
+          `${data.address}, ${data.city}`;
+        document.getElementById("previewState").textContent = data.state;
+        document.getElementById("previewBeds").textContent = data.beds;
+        document.getElementById("previewRating").textContent =
+          starsDisplay(data.overall_rating);
+        document.getElementById("previewHealth").textContent =
+          starsDisplay(data.health_inspection_rating);
+        document.getElementById("previewStaffing").textContent =
+          starsDisplay(data.staffing_rating);
+        document.getElementById("previewQuality").textContent =
+          starsDisplay(data.quality_measure_rating);
+
+        // Set Medicare link
+        const medicareUrl =
+          `https://www.medicare.gov/care-compare/details/nursing-home/${ccn}`;
+        document.getElementById("medicareLinkAnchor").href = medicareUrl;
+
+        // Show sections
+        document.getElementById("lookupResult").classList.remove("hidden");
+        document.getElementById("manualSection").classList.remove("hidden");
+        document.getElementById("downloadSection").classList.remove("hidden");
+        document.getElementById("medicareLink").classList.remove("hidden");
+
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.textContent = "Lookup";
+        btn.disabled = false;
+      }
+    }
+
+    async function downloadReport(format) {
+      const btn = format === "pdf"
+        ? document.getElementById("pdfBtn")
+        : document.getElementById("docxBtn");
+
+      btn.textContent = "Generating...";
+      btn.disabled = true;
+
+      const payload = {
+        ccn:                  currentCCN,
+        name_override:        document.getElementById("nameOverride").value,
+        emr:                  document.getElementById("emr").value,
+        current_census:       document.getElementById("currentCensus").value,
+        patient_type:         document.getElementById("patientType").value,
+        previous_coverage:    document.getElementById("previousCoverage").value,
+        previous_performance: document.getElementById("previousPerformance").value,
+        medical_coverage:     document.getElementById("medicalCoverage").value,
+      };
+
+      try {
+        const endpoint = format === "pdf"
+          ? "/api/generate-pdf"
+          : "/api/generate-docx";
+
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Export failed");
+        }
+
+        // Trigger browser download
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Facility_Assessment_${currentCCN}.${format}`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+      } catch (e) {
+        alert("Error: " + e.message);
+      } finally {
+        btn.textContent = format === "pdf"
+          ? "⬇ Download PDF"
+          : "⬇ Download Word (.docx)";
+        btn.disabled = false;
+      }
+    }
+
+    // Allow pressing Enter on the CCN input
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("ccnInput").addEventListener("keydown", e => {
+        if (e.key === "Enter") lookupFacility();
+      });
+    });
+  </script>
+
+</body>
+</html>
