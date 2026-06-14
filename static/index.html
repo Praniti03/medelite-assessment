@@ -292,7 +292,7 @@
         // Populate preview card
         document.getElementById("previewName").textContent = data.provider_name;
         document.getElementById("previewLocation").textContent =
-          `${data.address}, ${data.city}`;
+            `${data.address}, ${data.city}, ${data.state} ${data.zip}`;
         document.getElementById("previewState").textContent = data.state;
         document.getElementById("previewBeds").textContent = data.beds;
         document.getElementById("previewRating").textContent =

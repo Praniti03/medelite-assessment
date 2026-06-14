@@ -5,7 +5,7 @@ CMS_BASE = "https://data.cms.gov/provider-data/api/1/datastore/query"
 
 # These are the database IDs for each dataset we need
 PROVIDER_INFO_ID = "4pq5-n9py"      # facility name, address, star ratings
-CLAIMS_METRICS_ID = "b27b-2uc7"     # hospitalization and ED metrics
+CLAIMS_METRICS_ID = "ijh5-nb2v"     # hospitalization and ED metrics
 STATE_AVERAGES_ID = "fnz5-sq3n"     # state and national averages
 
 
@@ -81,17 +81,15 @@ async def fetch_state_averages(state: str) -> list:
 def extract_metric(claims: list, measure_code: str) -> str:
     """
     Find a specific metric from the claims data by its measure code.
-    measure codes:
-    521 = Short Term Hospitalization rate
-    522 = Short Term ED Visit rate
-    551 = Long Term Hospitalization rate
-    552 = Long Term ED Visit rate
     """
     for row in claims:
         if str(row.get("measure_code", "")) == str(measure_code):
             score = row.get("adjusted_score") or row.get("observed_score")
             if score is not None:
-                return str(score)
+                try:
+                    return str(round(float(score), 2))
+                except:
+                    return str(score)
     return "N/A"
 
 
@@ -105,14 +103,31 @@ def build_report_data(provider: dict, claims: list, manual: dict) -> dict:
     # NAME OVERRIDE LOGIC
     # If user typed a custom name — use that
     # If user left it blank — use the official CMS name
-    raw_api_name = provider.get("provider_name", "")
+    raw_api_name = provider.get("provider_name", "").title()
     display_name = manual.get("name_override", "").strip() or raw_api_name
 
+    def clean_address(raw: str) -> str:
+        """Clean up ALL CAPS address from CMS API"""
+        result = raw.title()
+        result = result.replace(" Sw ", " SW ")
+        result = result.replace(" Nw ", " NW ")
+        result = result.replace(" Ne ", " NE ")
+        result = result.replace(" Se ", " SE ")
+        result = result.replace("Sw ", "SW ")
+        result = result.replace("Nw ", "NW ")
+        result = result.replace("Ne ", "NE ")
+        result = result.replace("Se ", "SE ")
+        return result
+
     # Build the full address string
-    address = provider.get("provider_address", "")
-    city = provider.get("city_town", "")
+    address = clean_address(provider.get("provider_address", ""))
+    city = provider.get("citytown", "").title()
     state = provider.get("state", "")
-    location = f"{address}, {city}, {state}"
+    zip_code = str(provider.get("zip_code", ""))
+    if city:
+        location = f"{address}, {city}, {state} {zip_code}"
+    else:
+        location = f"{address}, {state} {zip_code}"
 
     return {
         # BRANDING — always hardcoded, never changes

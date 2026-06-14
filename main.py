@@ -50,16 +50,16 @@ async def lookup_facility(ccn: str):
     try:
         provider = await fetch_provider_info(ccn)
         return {
-            "provider_name": provider.get("provider_name"),
-            "state": provider.get("state"),
-            "address": provider.get("provider_address"),
-            "city": provider.get("city_town"),
-            "zip": provider.get("zip_code"),
-            "beds": provider.get("number_of_certified_beds"),
-            "overall_rating": provider.get("overall_rating"),
-            "health_inspection_rating": provider.get("health_inspection_rating"),
-            "staffing_rating": provider.get("staffing_rating"),
-            "quality_measure_rating": provider.get("qm_rating"),
+            "provider_name": provider.get("provider_name", "").title(),
+            "state": provider.get("state", ""),
+            "address": provider.get("provider_address", "").title(),
+            "city": provider.get("citytown", "").title(),
+            "zip": provider.get("zip_code", ""),
+            "beds": provider.get("number_of_certified_beds", "N/A"),
+            "overall_rating": provider.get("overall_rating", 0),
+            "health_inspection_rating": provider.get("health_inspection_rating", 0),
+            "staffing_rating": provider.get("staffing_rating", 0),
+            "quality_measure_rating": provider.get("qm_rating", 0),
         }
 
     except ValueError as e:
