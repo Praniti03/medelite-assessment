@@ -3,7 +3,7 @@
 A lightweight web application that automates the generation of facility assessment reports for Medelite directors. Enter a CMS Certification Number (CCN) to instantly pull public nursing home data, combine it with manual operational inputs, and download a polished PDF or Word report.
 
 ## Live Application
-🔗 ****
+🔗 **https://medelite-assessment.onrender.com**
 
 > Note: Hosted on Render free tier. First load may take 30-60 seconds if the server has been idle.
 
